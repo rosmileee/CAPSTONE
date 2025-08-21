@@ -1,0 +1,103 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SmartSight Admin Panel{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body { min-height: 100vh; display: flex; background-color: #f0f8ff; }
+        .sidebar { width: 280px; background-color: #add8e6; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1); }
+        .sidebar .header { text-align: center; margin-bottom: 30px; }
+        .sidebar .logo-text { font-size: 1.8rem; font-weight: bold; color: #4682b4; }
+        .sidebar .logo-text span { color: #ffd700; }
+        .sidebar .menu-section { flex-grow: 1; }
+        .sidebar .menu-section h5 { color: #555; margin-bottom: 15px; font-weight: normal; }
+        .sidebar .menu-item { display: flex; align-items: center; padding: 12px 15px; margin-bottom: 10px; border-radius: 8px; color: #4682b4; text-decoration: none; transition: background-color 0.3s, color 0.3s; font-weight: 500; }
+        .sidebar .menu-item i { font-size: 1.2rem; margin-right: 10px; color: #4682b4; }
+        .sidebar .menu-item:hover { background-color: #cceeff; color: #007bff; }
+        .sidebar .menu-item.active { background-color: #fff; color: #007bff; font-weight: bold; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); }
+        .sidebar .menu-item.active i { color: #007bff; }
+        .sidebar .profile-section { padding-top: 20px; border-top: 1px solid rgba(255, 255, 255, 0.3); text-align: center; }
+        .sidebar .profile-pic { width: 60px; height: 60px; border-radius: 50%; background-color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; color: #007bff; margin: 0 auto 10px auto; border: 2px solid #fff; }
+        .sidebar .username { font-weight: bold; color: #333; margin-bottom: 5px; }
+        .sidebar .email { font-size: 0.9em; color: #666; margin-bottom: 15px; }
+        .sidebar .logout-btn { background-color: #ffd700; border-color: #ffd700; color: #fff; font-weight: bold; padding: 10px 0; border-radius: 8px; transition: background-color 0.3s ease; }
+        .sidebar .logout-btn:hover { background-color: #e6c200; border-color: #e6c200; color: #fff; }
+        .profile-link { color: #333; text-decoration: none; transition: color 0.3s ease; }
+        .profile-link:hover { color: #007bff; }
+        .main-content { flex-grow: 1; padding: 40px; background-color: #fff; border-radius: 15px; margin: 20px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); }
+        .main-content h2 { color: #333; margin-bottom: 20px; font-weight: bold; }
+        
+        .search-input-group { width: 300px; }
+        .search-input-group .form-control { border-radius: 8px 0 0 8px; border-right: none; background-color: #f0f8ff; }
+        .search-input-group .input-group-text { background-color: #f0f8ff; border-radius: 0 8px 8px 0; cursor: pointer; }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="top-section">
+        <div class="header">
+            <div class="logo-text"><span>SMART</span> SIGHT</div>
+        </div>
+        <div class="menu-section">
+            <h5 class="text-start">Menu</h5>
+            <a href="{% url 'admin_home' %}" class="menu-item {% if request.resolver_match.url_name == 'admin_home' %}active{% endif %}">
+                <i class="bi bi-house-door"></i> Dashboard
+            </a>
+            <a href="{% url 'monitor_appointments' %}" class="menu-item {% if request.resolver_match.url_name == 'monitor_appointments' %}active{% endif %}">
+                <i class="bi bi-calendar-check"></i> Monitoring Scheduled Appointment
+            </a>
+            <a href="{% url 'manage_doctors_availability' %}" class="menu-item {% if request.resolver_match.url_name == 'manage_doctors_availability' %}active{% endif %}">
+                <i class="bi bi-person-gear"></i> Manage Doctors Availability
+            </a>
+            <a href="{% url 'doctor_overview_patients_record' %}" class="menu-item {% if request.resolver_match.url_name == 'doctor_overview_patients_record' %}active{% endif %}">
+                <i class="bi bi-file-earmark-person"></i> Doctor Overview/ Patients Record
+            </a>
+        </div>
+    </div>
+    <div class="profile-section">
+        <h5 class="text-start">Profile</h5>
+        <div class="profile-pic">
+            {% if request.user.is_authenticated %}
+                {{ request.user.username|first|upper }}
+            {% else %}
+                <i class="bi bi-person-fill"></i>
+            {% endif %}
+        </div>
+        <div class="username">
+            {% if request.user.is_authenticated %}
+                <a href="{% url 'admin_profile' %}" class="profile-link">{{ request.user.username }}</a>
+            {% else %}
+                <a href="{% url 'admin_login' %}" class="profile-link">Guest</a>
+            {% endif %}
+        </div>
+        <div class="email">{{ request.user.email|default:"" }}</div>
+        {% if request.user.is_authenticated %}
+        <form method="post" action="{% url 'admin_logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn logout-btn w-100">
+                <i class="bi bi-box-arrow-right"></i> Log out
+            </button>
+        </form>
+        {% else %}
+        <a href="{% url 'admin_login' %}" class="btn logout-btn w-100">
+            <i class="bi bi-box-arrow-in-right"></i> Log In
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="main-content">
+    {% block content %}{% endblock %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+{% block extra_js %}{% endblock %}
+
+</body>
+</html>

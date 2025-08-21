@@ -1,0 +1,259 @@
+{% extends 'admin_panel/base.html' %}
+{% load static %}
+
+{% block title %}Manage Doctor Availability - SmartSight{% endblock %}
+
+{% block extra_css %}
+    <style>
+        /* Your existing CSS... */
+        .doctor-schedule-container { display: flex; gap: 30px; flex-wrap: wrap; justify-content: center; }
+        .doctor-card {
+            background-color: #e6f7ff; border-radius: 15px; padding: 25px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05); width: 45%;
+            min-width: 350px; flex-grow: 1;
+        }
+        .doctor-card h3 { font-size: 1.3rem; font-weight: bold; color: #4682b4; margin-bottom: 15px; text-align: center; }
+        .doctor-card .doctor-name { font-size: 1.1rem; color: #555; margin-bottom: 20px; text-align: center; }
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; color: #4682b4; font-weight: bold; font-size: 1.1rem; }
+        .calendar-header .nav-arrow { background: none; border: none; font-size: 1.5rem; color: #4682b4; cursor: pointer; padding: 0 5px; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; }
+        .calendar-grid .day-name { font-weight: bold; color: #888; padding: 8px 0; }
+        .calendar-grid .date-cell { padding: 10px 0; border-radius: 8px; cursor: pointer; transition: background-color 0.2s, color 0.2s; font-weight: 500; color: #555; }
+        .calendar-grid .date-cell.empty { visibility: hidden; }
+        .calendar-grid .date-cell.current-month { background-color: #fff; border: 1px solid #cceeff; }
+        .calendar-grid .date-cell.selected { background-color: #007bff; color: #fff; font-weight: bold; }
+        .calendar-grid .date-cell.today { border: 2px solid #ffd700; }
+        .calendar-grid .date-cell:hover:not(.empty) { background-color: #e0f2ff; }
+        .time-slots-section { margin-top: 25px; }
+        .time-slots-section h4 { font-size: 1rem; color: #555; margin-bottom: 10px; font-weight: bold; }
+        .time-slots-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+        .time-slot-badge {
+            padding: 8px 15px; border-radius: 15px; font-size: 0.9em;
+            font-weight: 500; cursor: pointer; transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+        }
+        .time-slot-badge.occupied { background-color: #ffd700; color: #fff; border: 1px solid #ffd700; }
+        .time-slot-badge.vacant { background-color: #e6f7ff; color: #007bff; border: 1px solid #007bff; }
+        .time-slot-badge:hover { opacity: 0.8; }
+        .form-container {
+            margin-top: 25px;
+            padding: 20px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Manage Doctor Availability</h2>
+        <div class="input-group search-input-group">
+            <input type="text" id="searchInput" class="form-control" placeholder="Search">
+            <span class="input-group-text"><i class="bi bi-search"></i></span>
+        </div>
+    </div>
+
+    <div class="doctor-schedule-container">
+        {% for doctor in doctors %}
+        <div class="doctor-card">
+            <h3>SCHEDULE</h3>
+            <div class="doctor-name">Doc. {{ doctor.user.get_full_name|default:doctor.user.username }}</div>
+            <div class="calendar-component" data-doctor-id="{{ doctor.id }}" data-doctor-name="{{ doctor.user.get_full_name|default:doctor.user.username }}">
+                <div class="calendar-header">
+                    <button class="nav-arrow prev-month"><i class="bi bi-chevron-left"></i></button>
+                    <span class="month-year"></span>
+                    <button class="nav-arrow next-month"><i class="bi bi-chevron-right"></i></button>
+                </div>
+                <div class="calendar-grid">
+                    <span class="day-name">Mon</span><span class="day-name">Tue</span><span class="day-name">Wed</span>
+                    <span class="day-name">Thu</span><span class="day-name">Fri</span><span class="day-name">Sat</span>
+                    <span class="day-name">Sun</span>
+                </div>
+            </div>
+            
+            <div class="form-container">
+                <h4 class="mb-3 text-center">Set Availability for Doc. {{ doctor.user.get_full_name|default:doctor.user.username }}</h4>
+                <form id="availability-form-{{ doctor.id }}" class="availability-form" method="post" action="{% url 'set_doctor_availability' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="doctor_id" value="{{ doctor.id }}">
+                    <input type="hidden" name="date" id="date-{{ doctor.id }}">
+                    <div class="mb-3">
+                        <label for="start_time-{{ doctor.id }}" class="form-label">Start Time</label>
+                        <input type="time" name="start_time" id="start_time-{{ doctor.id }}" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="end_time-{{ doctor.id }}" class="form-label">End Time</label>
+                        <input type="time" name="end_time" id="end_time-{{ doctor.id }}" class="form-control" required>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">Save Availability</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="time-slots-section">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h4 class="mb-0">OCCUPIED</h4>
+                    <span class="badge time-slot-badge occupied"></span>
+                </div>
+                <div class="time-slots-grid occupied-slots-{{ doctor.id }}">
+                    {% for slot in doctor.occupied_slots %}
+                    <span class="time-slot-badge occupied">{{ slot }}</span>
+                    {% endfor %}
+                </div>
+                <div class="d-flex justify-content-between align-items-center mt-3 mb-2">
+                    <h4 class="mb-0">VACANT</h4>
+                    <span class="badge time-slot-badge vacant"></span>
+                </div>
+                <div class="time-slots-grid vacant-slots-{{ doctor.id }}">
+                    {% for slot in doctor.vacant_slots %}
+                    <span class="time-slot-badge vacant">{{ slot }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% endblock content %}
+
+{% block extra_js %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const calendarComponents = document.querySelectorAll('.calendar-component');
+        
+            calendarComponents.forEach(calendarComp => {
+                const monthYearSpan = calendarComp.querySelector('.month-year');
+                const prevMonthBtn = calendarComp.querySelector('.prev-month');
+                const nextMonthBtn = calendarComp.querySelector('.next-month');
+                const calendarGrid = calendarComp.querySelector('.calendar-grid');
+                const doctorId = calendarComp.dataset.doctorId;
+                const doctorName = calendarComp.dataset.doctorName;
+                const dateInput = document.getElementById(`date-${doctorId}`);
+        
+                let currentMonth = new Date().getMonth();
+                let currentYear = new Date().getFullYear();
+                let selectedDate = null;
+        
+                function renderCalendar(month, year) {
+                    calendarGrid.querySelectorAll('.date-cell').forEach(cell => cell.remove());
+        
+                    const firstDay = new Date(year, month, 1);
+                    const lastDay = new Date(year, month + 1, 0);
+                    const numDays = lastDay.getDate();
+                    const startDayOfWeek = firstDay.getDay(); 
+        
+                    monthYearSpan.textContent = `${new Date(year, month).toLocaleString('default', { month: 'long' })} ${year}`;
+        
+                    let startOffset = (startDayOfWeek === 0) ? 6 : startDayOfWeek - 1;
+        
+                    for (let i = 0; i < startOffset; i++) {
+                        const emptyCell = document.createElement('span');
+                        emptyCell.classList.add('date-cell', 'empty');
+                        calendarGrid.appendChild(emptyCell);
+                    }
+        
+                    for (let day = 1; day <= numDays; day++) {
+                        const dateCell = document.createElement('span');
+                        dateCell.classList.add('date-cell', 'current-month');
+                        dateCell.textContent = day;
+                        const formattedDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                        dateCell.dataset.fullDate = formattedDate;
+        
+                        const today = new Date();
+                        if (day === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
+                            dateCell.classList.add('today');
+                        }
+        
+                        if (selectedDate && dateCell.dataset.fullDate === selectedDate) {
+                            dateCell.classList.add('selected');
+                        }
+        
+                        dateCell.addEventListener('click', () => {
+                            const prevSelected = calendarGrid.querySelector('.date-cell.selected');
+                            if (prevSelected) {
+                                prevSelected.classList.remove('selected');
+                            }
+                            dateCell.classList.add('selected');
+                            selectedDate = dateCell.dataset.fullDate;
+                            dateInput.value = selectedDate; // Set the selected date in the hidden input
+                            console.log(`Selected date for ${doctorName}: ${selectedDate}`);
+                            
+                            // You can add logic here to fetch and update time slots for the selected date
+                            // e.g., fetchTimeSlots(doctorId, selectedDate);
+                        });
+                        calendarGrid.appendChild(dateCell);
+                    }
+                }
+        
+                prevMonthBtn.addEventListener('click', () => {
+                    currentMonth--;
+                    if (currentMonth < 0) {
+                        currentMonth = 11;
+                        currentYear--;
+                    }
+                    renderCalendar(currentMonth, currentYear);
+                });
+        
+                nextMonthBtn.addEventListener('click', () => {
+                    currentMonth++;
+                    if (currentMonth > 11) {
+                        currentMonth = 0;
+                        currentYear++;
+                    }
+                    renderCalendar(currentMonth, currentYear);
+                });
+        
+                renderCalendar(currentMonth, currentYear);
+            });
+        
+            document.getElementById('searchInput').addEventListener('input', function () {
+                let filter = this.value.toLowerCase();
+                let doctorCards = document.querySelectorAll('.doctor-card');
+                doctorCards.forEach(card => {
+                    let text = card.querySelector('.doctor-name').textContent.toLowerCase();
+                    card.style.display = text.includes(filter) ? 'flex' : 'none';
+                });
+            });
+        
+            // Event listeners for the new availability forms
+            document.querySelectorAll('.availability-form').forEach(form => {
+                form.addEventListener('submit', function(event) {
+                    event.preventDefault(); // Prevent the default form submission
+                    
+                    const formData = new FormData(form);
+                    const doctorId = formData.get('doctor_id');
+                    const date = formData.get('date');
+                    const startTime = formData.get('start_time');
+                    const endTime = formData.get('end_time');
+
+                    if (!date) {
+                        alert('Please select a date from the calendar first.');
+                        return;
+                    }
+
+                    fetch(form.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Availability saved successfully!');
+                            // You can add code here to refresh the time slots display
+                            // For now, it just shows an alert.
+                        } else {
+                            alert('Error: ' + data.error);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('An error occurred while saving.');
+                    });
+                });
+            });
+        });
+    </script>
+{% endblock %}

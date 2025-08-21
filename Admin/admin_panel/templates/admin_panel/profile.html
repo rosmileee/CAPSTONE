@@ -1,0 +1,74 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Profile - SmartSight</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+  body {
+    background-color: #e6f7ff; /* Lightest blue background, consistent with main content area */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+  }
+  .card {
+    border-radius: 15px; /* Rounded corners for the card */
+    padding: 20px; /* Adjusted padding for profile card */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+    width: 100%;
+  }
+  .card-title {
+    color: #333;
+    font-weight: bold;
+    margin-bottom: 15px;
+  }
+  hr {
+    border-top: 1px solid #eee;
+    margin-top: 15px;
+    margin-bottom: 20px;
+  }
+  p {
+    margin-bottom: 10px;
+    color: #555;
+  }
+  strong {
+    color: #333;
+  }
+  .btn-primary {
+    background-color: #ffd700; /* Gold-like color for the button */
+    border-color: #ffd700;
+    color: #fff;
+    font-weight: bold;
+    padding: 10px 15px;
+    border-radius: 8px;
+    transition: background-color 0.3s ease;
+  }
+  .btn-primary:hover {
+    background-color: #e6c200; /* Slightly darker gold on hover */
+    border-color: #e6c200;
+    color: #fff;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="card mx-auto shadow-sm" style="max-width: 500px;">
+    <div class="card-body">
+      <h3 class="card-title text-center">Admin Profile</h3>
+      <hr>
+      <p><strong>Username:</strong> {{ user.username }}</p>
+      <p><strong>Email:</strong> {{ user.email }}</p>
+      <p><strong>Date Joined:</strong> {{ user.date_joined }}</p>
+      <p><strong>Last Login:</strong> {{ user.last_login }}</p>
+      <a href="{% url 'admin_home' %}" class="btn btn-primary mt-3">Back to Dashboard</a>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

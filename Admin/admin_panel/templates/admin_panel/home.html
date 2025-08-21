@@ -1,0 +1,70 @@
+{% extends 'admin_panel/base.html' %}
+{% load static %}
+
+{% block title %}Admin Home - SmartSight{% endblock %}
+
+{% block content %}
+    <h2 class="mb-4">Dashboard</h2>
+
+    {# Welcome Card #}
+    <div class="card p-4 mb-4 shadow-sm" style="border-radius: 15px; background-color: #e6f7ff; border: 1px solid #cceeff;">
+        <h3 class="card-title" style="color: #4682b4; font-weight: bold;">Hello Admin!</h3>
+        <p class="lead" style="color: #555;">
+            Welcome to your SmartSight Admin Dashboard. Here you can oversee appointment requests and system settings for Enhance Vision Optical PH.
+        </p>
+    </div>
+
+    {# Summary Cards #}
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="card p-3 shadow-sm text-center" style="border-radius: 15px; background-color: #fff; border: 1px solid #dee2e6;">
+                <div class="card-body">
+                    <h4 class="card-title text-primary mb-2" style="font-weight: bold;">
+                        <i class="bi bi-calendar-check me-2"></i>Total Appointments
+                    </h4>
+                    <p class="display-5 fw-bold" style="color: #4682b4;">{{ total_appointments }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card p-3 shadow-sm text-center" style="border-radius: 15px; background-color: #fff; border: 1px solid #dee2e6;">
+                <div class="card-body">
+                    <h4 class="card-title text-warning mb-2" style="font-weight: bold;">
+                        <i class="bi bi-hourglass-split me-2"></i>Pending Appointments
+                    </h4>
+                    <p class="display-5 fw-bold" style="color: #ffd700;">{{ pending_appointments }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card p-3 shadow-sm text-center" style="border-radius: 15px; background-color: #fff; border: 1px solid #dee2e6;">
+                <div class="card-body">
+                    <h4 class="card-title text-success mb-2" style="font-weight: bold;">
+                        <i class="bi bi-person-fill me-2"></i>Active Doctors
+                    </h4>
+                    <p class="display-5 fw-bold" style="color: #28a745;">{{ active_doctors }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# Dynamic Recent Activity Section #}
+    <div class="card p-4 shadow-sm" style="border-radius: 15px; background-color: #fff; border: 1px solid #dee2e6;">
+        <h3 class="card-title" style="color: #333; font-weight: bold;">Recent Activity</h3>
+        <ul class="list-group list-group-flush">
+            {% if recent_activities %}
+                {% for activity in recent_activities %}
+                    <li class="list-group-item" style="background-color: #fff; border-color: #eee; color: #666;">
+                        <i class="bi bi-info-circle-fill text-info me-2"></i>
+                        New appointment scheduled by {{ activity.patient_first_name }} {{ activity.patient_last_name }} for {{ activity.appointment_datetime|date:"M d, Y" }} at {{ activity.appointment_datetime|time:"g:i A" }}.
+                    </li>
+                {% endfor %}
+            {% else %}
+                <li class="list-group-item text-center text-muted" style="background-color: #fff; border-color: #eee; color: #666;">
+                    No recent appointments found.
+                </li>
+            {% endif %}
+        </ul>
+    </div>
+
+{% endblock content %}

@@ -1,0 +1,256 @@
+{% extends 'admin_panel/base.html' %}
+{% load static %}
+
+{% block title %}Monitoring Appointments - SmartSight{% endblock %}
+
+{% block content %}
+    <style>
+        /* Your existing CSS styles... */
+        .main-content {
+          flex-grow: 1;
+          padding: 40px;
+          background-color: #fff;
+          border-radius: 15px;
+          margin: 20px;
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .main-content h2 {
+          color: #333;
+          margin-bottom: 20px;
+          font-weight: bold;
+        }
+
+        .search-container {
+          display: flex;
+          justify-content: flex-end; /* Push search bar to the right */
+          align-items: center; /* Vertically align items */
+          margin-bottom: 20px;
+        }
+        .search-input-group {
+          width: 300px; /* Adjust width as needed */
+        }
+        .search-input-group .form-control {
+          border-radius: 8px 0 0 8px;
+          border-right: none;
+          background-color: #f0f8ff; /* Aliceblue background for inputs */
+        }
+        .search-input-group .input-group-text {
+          background-color: #f0f8ff; /* Match input background */
+          border-radius: 0 8px 8px 0;
+          cursor: pointer;
+        }
+
+        .table {
+          border-collapse: separate;
+          border-spacing: 0 10px; /* Space between rows */
+          width: 100%; /* Ensure table takes full width */
+        }
+        .table thead th {
+          background-color: #f8f9fa; /* Light grey header background */
+          border-bottom: 2px solid #dee2e6;
+          padding: 12px 15px;
+          color: #555;
+          font-weight: bold;
+          text-align: left; /* Default left align */
+        }
+        .table thead th:nth-child(1),
+        .table thead th:nth-child(2),
+        .table thead th:nth-child(3) {
+          text-align: left;
+        }
+        .table thead th:nth-child(4),
+        .table thead th:nth-child(5),
+        .table thead th:nth-child(6),
+        .table thead th:nth-child(7),
+        .table thead th:nth-child(8) {
+          text-align: center;
+        }
+
+        .table tbody tr {
+          background-color: #fff;
+          border-radius: 8px; /* Rounded corners for table rows */
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* Subtle shadow for rows */
+          margin-bottom: 10px; /* Space between rows */
+        }
+        .table tbody td {
+          padding: 12px 15px;
+          vertical-align: middle;
+          border-top: none; /* Remove top border of cells */
+          border-bottom: none; /* Remove bottom border of cells */
+        }
+        .table tbody tr td:first-child {
+          border-top-left-radius: 8px;
+          border-bottom-left-radius: 8px;
+        }
+        .table tbody tr td:last-child {
+          border-top-right-radius: 8px;
+          border-bottom-right-radius: 8px;
+        }
+
+        .table tbody td:nth-child(1),
+        .table tbody td:nth-child(2),
+        .table tbody td:nth-child(3) {
+          text-align: left;
+        }
+        .table tbody td:nth-child(4),
+        .table tbody td:nth-child(5),
+        .table tbody td:nth-child(6),
+        .table tbody td:nth-child(7),
+        .table tbody td:nth-child(8) {
+          text-align: center;
+        }
+
+        .badge-status {
+          padding: 6px 10px;
+          border-radius: 15px; /* More rounded for pill shape */
+          font-weight: bold;
+          font-size: 0.85em;
+          display: inline-block; /* Ensure padding works */
+          text-align: center;
+          min-width: 80px; /* Ensure consistent width */
+        }
+        .badge-status.normal {
+          background-color: #e6ffe6; /* Light green */
+          color: #28a745; /* Green text */
+          border: 1px solid #28a745;
+        }
+        .badge-status.severe {
+          background-color: #ffe6e6; /* Light red */
+          color: #dc3545; /* Red text */
+          border: 1px solid #dc3545;
+        }
+        .badge-status.completed {
+          background-color: #e6f7ff; /* Light blue */
+          color: #007bff; /* Blue text */
+          border: 1px solid #007bff;
+        }
+        .badge-status.scheduled {
+          background-color: #fff3e6; /* Light orange */
+          color: #fd7e14; /* Orange text */
+          border: 1px solid #fd7e14;
+        }
+        .badge-status.cancelled {
+          background-color: #f8d7da; /* Light red */
+          color: #dc3545; /* Red text */
+          border: 1px solid #dc3545;
+        }
+
+        .archive-btn {
+          background-color: #e6f7ff; /* Lighter blue background for the button */
+          color: #007bff; /* Blue icon color */
+          border: 1px solid #007bff; /* Blue border */
+          border-radius: 50%; /* Make it circular */
+          width: 35px; /* Fixed width */
+          height: 35px; /* Fixed height */
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: background-color 0.3s ease, color 0.3s ease;
+          cursor: pointer; /* Add pointer cursor to indicate clickability */
+          font-size: 1.1em; /* Adjust icon size */
+        }
+        .archive-btn:hover {
+          background-color: #007bff; /* Blue on hover */
+          color: #fff; /* White icon on hover */
+        }
+    </style>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Monitoring Scheduled Appointments</h2>
+        <div class="input-group search-input-group">
+            <input type="text" id="searchInput" class="form-control" placeholder="Search">
+            <span class="input-group-text"><i class="bi bi-search"></i></span>
+        </div>
+    </div>
+
+    <div id="appointmentsTable">
+        <table class="table mt-3">
+            <thead>
+                <tr>
+                    <th>Last Name</th>
+                    <th>First Name</th>
+                    <th>Age</th>
+                    <th>Appointment Date & Time</th>
+                    <th>Doctor Assigned</th>
+                    <th>Severity</th>
+                    <th>Status</th>
+                    <th>Archive</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for appt in appointments %}
+                <tr>
+                    <td>{{ appt.patient_last_name }}</td>
+                    <td>{{ appt.patient_first_name }}</td>
+                    <td>{{ appt.patient_age }}</td>
+                    <td>{{ appt.appointment_datetime|date:"F d, Y P" }}</td>
+                    <td>{{ appt.doctor.user.get_full_name }}</td>
+                    <td>
+                        <span class="badge-status {{ appt.severity|lower }}">{{ appt.severity }}</span>
+                    </td>
+                    <td>
+                        <span class="badge-status {{ appt.status|lower }}">{{ appt.status }}</span>
+                    </td>
+                    <td>
+                        <button class="archive-btn" data-id="{{ appt.id }}"><i class="bi bi-download"></i></button>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="text-center">No appointments found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock content %}
+
+{% block extra_js %}
+    <script>
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', function () {
+            let filter = this.value.toLowerCase();
+            let rows = document.querySelectorAll('#appointmentsTable tbody tr');
+            rows.forEach(row => {
+                let text = row.textContent.toLowerCase();
+                row.style.display = text.includes(filter) ? '' : 'none';
+            });
+        });
+
+        // AJAX for Archive button
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('appointmentsTable').addEventListener('click', function(event) {
+                if (event.target.closest('.archive-btn')) {
+                    const button = event.target.closest('.archive-btn');
+                    const appointmentId = button.dataset.id;
+                    
+                    if (confirm('Are you sure you want to archive this appointment?')) {
+                        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                        
+                        fetch('{% url "archive_appointment" %}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                                'X-CSRFToken': csrfToken
+                            },
+                            body: `id=${appointmentId}`
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                alert(data.message);
+                                button.closest('tr').remove();
+                            } else {
+                                alert('Error: ' + data.error);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            alert('An error occurred while archiving.');
+                        });
+                    }
+                }
+            });
+        });
+    </script>
+{% endblock %}
